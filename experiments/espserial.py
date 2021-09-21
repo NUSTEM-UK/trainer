@@ -20,10 +20,10 @@ ser.write(myString.encode())
 
 total = 0
 
-while total < (len(myString):
+while total < len(myString):
     received = str(ser.read(1).decode("utf-8"))
     # print(ser.read(1))
     print(received)
     total += 1
 
-ser.close()
+ser.close();
