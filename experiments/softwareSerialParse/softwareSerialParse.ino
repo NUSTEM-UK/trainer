@@ -6,6 +6,7 @@
 SoftwareSerial myPort(RX_PIN, TX_PIN, false, 256);
 
 String x;
+int incomingByte = 0;
 int i;
 
 void setup() {
@@ -26,12 +27,12 @@ void setup() {
 }
 
 void loop() {
-    while (!myPort.available()) {
-        x = myPort.readString();
-        Serial.println(x);
-        if (x == "cabbage") {
-            Serial.println("...is horrid");
-            Serial.println(i++);
-        }
+    if (myPort.available() > 0) {
+        // x = myPort.readString();
+        incomingByte = myPort.read();
+        Serial.println(incomingByte, DEC);
+        // if (x == "cabbage") {
+        //     Serial.println("...is horrid");
+        //     Serial.println(i++);
     }
 }
