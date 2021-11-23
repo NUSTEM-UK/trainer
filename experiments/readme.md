@@ -28,6 +28,8 @@ Proof-of-concept as one end of the Pico-to-ESP8266 serial connection. Uses [Soft
 
 The ESP has one UART, but SoftwareSerial should be able to handle another channel for us. Note that the SoftwareSerial implementation on ESP should probably be [espsoftwareserial](https://github.com/plerup/espsoftwareserial). From my reading of that readme, this is the version that will be pulled in by Arduino IDE on an ESP board anyway.
 
+We're using a WEMOS D1 Mini in testing here, and the Version 2.4.0 of the esp8266 board in boards manager.
+
 ## serialecho
 
 Most-basic-possible ESP8266 Serial script. Just echoes whatever comes in. Which, since that's coming in over USB, isn't terribly useful. Use the serial monitor in Arduino IDE.
