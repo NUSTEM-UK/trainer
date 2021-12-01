@@ -8,6 +8,7 @@
 # Simplified imports, we don't need the guards in our use case
 from rotary_irq_rp2 import RotaryIRQ
 import time
+from machine import Pin
 
 # Create RotaryIQQ object with half_step set so we increment on each click
 # RANGE_BOUNDED limits end-points to 0/180, which we want for servos but
@@ -22,6 +23,10 @@ r = RotaryIRQ(pin_num_clk=13,
               pull_up=False,
               half_step=True)
 
+# Turns out the rotary encoder button shorts to ground when pressed,
+# so we need to set the input PULL_UP, and test for no value.
+button = Pin(12, Pin.IN, Pin.PULL_UP)
+
 val_old = r.value()
 print('>>> Start')
 print('result =', val_old)
@@ -33,4 +38,10 @@ while True:
         val_old = val_new
         print('result =', val_new)
 
+    # If not because 'pressed' is GND.
+    # TODO: debounce handling, via a state toggle on press/release
+    if not button.value():
+        print('>>> pressed')
+
+    time.sleep_ms(10)
     time.sleep_ms(50)

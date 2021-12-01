@@ -12,3 +12,9 @@ Lots of ways of doing this, potentially. So far (2021-09-30):
 - ...but it turns out ESP8266 modules can't do I2C peripheral mode, and the Pico Micropython I2C module doesn't yet have an I2C responder. Both ends want to be controller.
 - Next thing to try: SoftwareSerial.
 
+## Progress as of 2021-12-01:
+
+* SoftwareSerial experiments: working, we have comms between Pico and SoftwareSerial ESP8266
+* Rotary encoder experiments: KY040 encoder works with a third-party library, seems pretty good.
+* Display experiments underway.
+*
