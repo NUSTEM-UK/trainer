@@ -16,5 +16,5 @@ Lots of ways of doing this, potentially. So far (2021-09-30):
 
 * SoftwareSerial experiments: working, we have comms between Pico and SoftwareSerial ESP8266
 * Rotary encoder experiments: KY040 encoder works with a third-party library, seems pretty good.
+* Rotary encoder button handling: working, will need debounce handling.
 * Display experiments underway.
-*
