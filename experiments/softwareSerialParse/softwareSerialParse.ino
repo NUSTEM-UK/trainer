@@ -27,12 +27,14 @@ void setup() {
 }
 
 void loop() {
-    if (myPort.available() > 0) {
-        // x = myPort.readString();
-        incomingByte = myPort.read();
-        Serial.println(incomingByte, DEC);
-        // if (x == "cabbage") {
-        //     Serial.println("...is horrid");
-        //     Serial.println(i++);
+    if (myPort.available()) {
+        x = myPort.readString();
+        // incomingByte = myPort.read();
+        Serial.println(x);
+        // Serial.println(incomingByte, DEC);
+        if (x == "cabbage") {
+            Serial.println("...is horrid");
+            Serial.println(i++);
+        }
     }
 }
