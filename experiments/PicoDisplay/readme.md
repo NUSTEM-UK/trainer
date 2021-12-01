@@ -23,6 +23,8 @@ What I want, I think, looks something like this:
      000----------------------180
 ```
 
+Image reference: ![Star Trek sickbay display](https://blog.arduino.cc/wp-content/uploads/2019/07/Untitled-8-2-2-1.png)
+
 The top scale represents position of servo 0, the lower is servo 1. The `^` and `v` carets move along their respective scales and back. I guess a sinusoidal animation would be nicest, but read on.
 
 There are, conveniently, buttons in the four corners beside the numbers. So my suggestion would be: whichever button is pressed, its number changes colour and the rotary encoder affects that number.
