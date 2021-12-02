@@ -21,12 +21,15 @@ down_arrow = [0,4,4,21,14,4,0,0]
 bits = [128,64,32,16,8,4,2,1]  # Powers of 2
 
 # Awkward bit where I test out the limiter for the motion
-# These are angles between 0 and 180
+# These are angles between 0 and 180 - the absolutes are the x position relative to x=0
 top_interval = [1, 120] 
 bottom_interval = [20, 170]
 top_absolutes = (int(50 + ((top_interval[0]/180)*140)), int(50 + ((top_interval[1]/180)*140)))
+bottom_absolutes = (int(50 + ((bottom_interval[0]/180)*140)), int(50 + ((bottom_interval[1]/180)*140)))
 
 print(top_absolutes)
+print(bottom_absolutes)
+
 
 # Print defined character from set above
 def draw_char(xpos, ypos, pattern):
@@ -71,18 +74,13 @@ def backround_draw():
     display.pixel_span(50,105,140)
     display.pixel_span(50,106,140)
 
-def draw_topticks(left, right):
-    # left = 80
-    # right = 100
-    first_tick = left
-    second_tick = right
+def draw_ticks(top_left, top_right, bottom_left, bottom_right):
     display.set_pen(255,255,255)
-    display.rectangle(first_tick, 27, 2, 6)
-    display.rectangle(second_tick, 27, 2, 6)
+    display.rectangle(top_left, 27, 2, 12)
+    display.rectangle(top_right, 27, 2, 12)
+    display.rectangle(bottom_left, 100, 2, 12)
+    display.rectangle(bottom_right, 100, 2, 12)
 
-# def draw_lowticks(left, right):
-#     first_tick = int(50 + ((left/180)*140))
-#     second_tick = int(50 + ((right/180)*140))
 
 while True:
     # print("ello")
@@ -90,7 +88,7 @@ while True:
         display.set_pen(0, 0, 0)
         display.clear()
         backround_draw()
-        draw_topticks(top_absolutes[0], top_absolutes[1])
+        draw_ticks(top_absolutes[0], top_absolutes[1], bottom_absolutes[0], bottom_absolutes[1])       
         display.set_pen(255,0,0) # Red Arrows
         draw_char(i, 38, up_arrow)
         draw_char(189-i, 88, down_arrow)
@@ -102,7 +100,7 @@ while True:
         display.set_pen(0, 0, 0)
         display.clear()
         backround_draw()
-        draw_topticks(top_absolutes[0], top_absolutes[1])
+        draw_ticks(top_absolutes[0], top_absolutes[1], bottom_absolutes[0], bottom_absolutes[1]) 
         display.set_pen(255,0,0) # Red Arrows
         draw_char(i, 38, up_arrow)
         draw_char(189-i, 88, down_arrow) # bit wrong
