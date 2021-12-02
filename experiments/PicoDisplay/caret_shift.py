@@ -9,13 +9,31 @@ width = display.get_width()
 height = display.get_height()
 gc.collect()
 display_buffer = bytearray(width * height * 2)
+# Fill with black
 display.init(display_buffer)
 
 # Set the display backlight to 50%
 display.set_backlight(1)
 
-# fills the screen with black
-def up_arrow(across, up):
+# Borrowed from Tony Goodhew's PicoDisplay example code
+up_arrow =[0,4,14,21,4,4,0,0]
+down_arrow = [0,4,4,21,14,4,0,0]
+bits = [128,64,32,16,8,4,2,1]  # Powers of 2
+
+# Print defined character from set above
+def draw_char(xpos, ypos, pattern):
+    for line in range(8):  # 5x8 characters
+        for ii in range(5): # Low value bits only
+            i = ii + 3
+            dot = pattern[line] & bits[i] # Extract bit
+            if dot: # print white dots
+                display.pixel(xpos+i*2, ypos+line*2)
+                display.pixel(xpos+i*2, ypos+line*2+1)
+                display.pixel(xpos+i*2+1, ypos+line*2)
+                display.pixel(xpos+i*2+1, ypos+line*2+1)
+
+def draw_up_arrow(across, up):
+    # Replaced with draw_char, above
     y=up
     x=across
     display.set_pen(255,255,255)
@@ -33,13 +51,17 @@ def up_arrow(across, up):
     display.pixel(x+5,y)
 
 def backround_draw():
-    display.set_pen(255,255,255)
+    display.set_pen(255,255,0)
     display.text("000", 10, 25,200)
     display.text("180", 200, 25,200)
-    #display.text("000", 10, 100,200)
+    display.text("000", 10, 100,200)
+    display.text("180", 200, 100,200)
     #Draw the Top Horizontal Scale
+    display.set_pen(255,255,255)
     display.pixel_span(50,31,140)
     display.pixel_span(50,32,140)
+    display.pixel_span(50,105,140)
+    display.pixel_span(50,106,140)
 
 def draw_topticks(left, right):
     first_tick = int(50 + ((left/180)*140))
@@ -50,13 +72,21 @@ while True:
         display.set_pen(0, 0, 0)
         display.clear()
         backround_draw()
-        up_arrow(i,45)
-        utime.sleep(0.02)
+        display.set_pen(255,0,0) # Red Arrows
+        draw_char(i, 38, up_arrow)
+        draw_char(189-i, 88, down_arrow)
+        # draw_up_arrow(i,45)
+        # draw_up_arrow(i,100)
+        # utime.sleep(0.002)
         display.update()
     for i in range(189,51, -1):
         display.set_pen(0, 0, 0)
         display.clear()
         backround_draw()
-        up_arrow(i,45)
-        utime.sleep(0.02)
+        display.set_pen(255,0,0) # Red Arrows
+        draw_char(i, 38, up_arrow)
+        draw_char(189-i, 88, down_arrow) # bit wrong
+        # draw_up_arrow(i,45)
+        # draw_up_arrow(i,100)
+        # utime.sleep(0.002)
         display.update()
