@@ -63,15 +63,27 @@ def backround_draw():
     display.pixel_span(50,105,140)
     display.pixel_span(50,106,140)
 
-def draw_topticks(left, right):
+def draw_topticks():
+    left = 50
+    right = 100
     first_tick = int(50 + ((left/180)*140))
     second_tick = int(50 + ((right/180)*140))
+    print(first_tick)
+    print(second_tick)
+    display.set_pen(255,255,255)
+    display.rectangle(first_tick, 27, 2, 6)
+    display.rectangle(second_tick, 27, 2, 6)
+
+# def draw_lowticks(left, right):
+#     first_tick = int(50 + ((left/180)*140))
+#     second_tick = int(50 + ((right/180)*140))
 
 while True:
     for i in range(51,189):
         display.set_pen(0, 0, 0)
         display.clear()
         backround_draw()
+        draw_topticks()
         display.set_pen(255,0,0) # Red Arrows
         draw_char(i, 38, up_arrow)
         draw_char(189-i, 88, down_arrow)
