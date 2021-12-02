@@ -20,6 +20,14 @@ up_arrow =[0,4,14,21,4,4,0,0]
 down_arrow = [0,4,4,21,14,4,0,0]
 bits = [128,64,32,16,8,4,2,1]  # Powers of 2
 
+# Awkward bit where I test out the limiter for the motion
+# These are angles between 0 and 180
+top_interval = [1, 120] 
+bottom_interval = [20, 170]
+top_absolutes = (int(50 + ((top_interval[0]/180)*140)), int(50 + ((top_interval[1]/180)*140)))
+
+print(top_absolutes)
+
 # Print defined character from set above
 def draw_char(xpos, ypos, pattern):
     for line in range(8):  # 5x8 characters
@@ -63,13 +71,11 @@ def backround_draw():
     display.pixel_span(50,105,140)
     display.pixel_span(50,106,140)
 
-def draw_topticks():
-    left = 50
-    right = 100
-    first_tick = int(50 + ((left/180)*140))
-    second_tick = int(50 + ((right/180)*140))
-    print(first_tick)
-    print(second_tick)
+def draw_topticks(left, right):
+    # left = 80
+    # right = 100
+    first_tick = left
+    second_tick = right
     display.set_pen(255,255,255)
     display.rectangle(first_tick, 27, 2, 6)
     display.rectangle(second_tick, 27, 2, 6)
@@ -79,11 +85,12 @@ def draw_topticks():
 #     second_tick = int(50 + ((right/180)*140))
 
 while True:
+    # print("ello")
     for i in range(51,189):
         display.set_pen(0, 0, 0)
         display.clear()
         backround_draw()
-        draw_topticks()
+        draw_topticks(top_absolutes[0], top_absolutes[1])
         display.set_pen(255,0,0) # Red Arrows
         draw_char(i, 38, up_arrow)
         draw_char(189-i, 88, down_arrow)
