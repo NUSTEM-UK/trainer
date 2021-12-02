@@ -86,7 +86,7 @@ def draw_topticks(left, right):
 
 while True:
     # print("ello")
-    for i in range(51,189):
+    for i in range(top_absolutes[0], top_absolutes[1]-4):
         display.set_pen(0, 0, 0)
         display.clear()
         backround_draw()
@@ -98,10 +98,11 @@ while True:
         # draw_up_arrow(i,100)
         # utime.sleep(0.002)
         display.update()
-    for i in range(189,51, -1):
+    for i in range(top_absolutes[1]-4,top_absolutes[0], -1): # -4 adjusts for caret arrow widths
         display.set_pen(0, 0, 0)
         display.clear()
         backround_draw()
+        draw_topticks(top_absolutes[0], top_absolutes[1])
         display.set_pen(255,0,0) # Red Arrows
         draw_char(i, 38, up_arrow)
         draw_char(189-i, 88, down_arrow) # bit wrong
