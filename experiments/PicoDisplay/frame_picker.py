@@ -9,6 +9,8 @@ x_end = 180   # note that this isn't the end of the cycle, actually the middle.
 x_current = 0
 
 ## The total length of the line in pixels is from x pixel 50 to x pixel 140
+x_pixel_start = 50
+x_pixel_end = 140
 max_line_length = 90
 
 ## We need to define a frame rate, I'm guessing 24fps, and a cycle duration 1 second.
@@ -26,11 +28,12 @@ top_x_position = []
 
 ## I need an array that stores the x positions for each frame
 for i in range(frames_per_cycle/2):
-    #take the current frame number and calc the angular position
-    x_current = int(x_start + (i/frames_per_cycle)*180)
+    # take the current frame number and calc the angular position
+    x_current = int(x_start + (i/frames_per_cycle)*(x_end - x_start)
+    
+    # take the angular position and then find the x pixel location
+    
 
-    
-    
 
 while True:
     time_now = utime.ticks_ms()
