@@ -1,4 +1,4 @@
-### Test code to work out how to create the programmable animation that doesn't interupt and timing.
+## Test code to work out how to create the programmable animation that doesn't interupt and timing.
 import utime
 
 ## First we need start and end points of the cycle
