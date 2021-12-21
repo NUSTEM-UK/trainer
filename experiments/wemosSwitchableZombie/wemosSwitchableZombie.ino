@@ -1,7 +1,6 @@
-// Working as of 2021-12-21, with picoserial.py test script.
-
 #include <Arduino.h>
 #include <SoftwareSerial.h>
+
 
 #define RX_PIN D2
 #define TX_PIN D1
