@@ -14,8 +14,8 @@ from machine import Pin
 # RANGE_BOUNDED limits end-points to 0/180, which we want for servos but
 # may need to handle differently for LEDs.
 # TODO: work out range limits
-r = RotaryIRQ(pin_num_clk=13,
-              pin_num_dt=14,
+r = RotaryIRQ(pin_num_clk=21,
+              pin_num_dt=22,
               min_val=0,
               max_val=180,
               reverse=False,
