@@ -1,3 +1,5 @@
+// Working as of 2021-12-21, with picoserial.py test script.
+
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 
@@ -5,9 +7,8 @@
 #define TX_PIN D1
 SoftwareSerial myPort(RX_PIN, TX_PIN, false, 256);
 
-String x;
-int incomingByte = 0;
-int i;
+String received;
+char incomingChar = 0;
 
 void setup() {
     Serial.begin(115200); // Standard hardware serial port, for debugging
@@ -27,14 +28,25 @@ void setup() {
 }
 
 void loop() {
-    if (myPort.available()) {
-        x = myPort.readString();
-        // incomingByte = myPort.read();
-        Serial.println(x);
-        // Serial.println(incomingByte, DEC);
-        if (x == "cabbage") {
-            Serial.println("...is horrid");
-            Serial.println(i++);
+    // Check if we have a character incoming
+    if (myPort.available() > 0) {
+        // Read incoming, and append to capture string
+        incomingChar = myPort.read();
+        received += incomingChar;
+
+        // Check if we have a newline terminator
+        if (incomingChar == '\n') {
+            // Remove that closing newline from the assembled string
+            received.trim();
+            // Now parse the received string
+            if (received == "cabbage") {
+                Serial.print(received);
+                Serial.println("...is horrid");
+            } else {
+                Serial.println(received);
+            }
+            // Reset the capture string
+            received = "";
         }
     }
 }
