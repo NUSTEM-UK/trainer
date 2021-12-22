@@ -11,7 +11,7 @@ servo1pos = 0
 servo2pos = 180
 
 waitingForConnection = True
-harbingerMode = False
+isHarbinger = False
 
 # uart1.write('hello\n')
 # print('hello')

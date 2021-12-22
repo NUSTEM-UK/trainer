@@ -10,6 +10,8 @@ bool isSerialZombie = false;
 String received;
 char incomingChar = 0;
 
+const char *ack = "ACK ACK ACK";
+
 // Connect Servo setup
 ConnectServo servoD5;
 ConnectServo servoD7;
@@ -80,11 +82,11 @@ void loop() {
                 Serial.print(received);
                 Serial.println(" >>> CEDING CONTROL");
                 isSerialZombie = true;
-                myPort.write('ACK ACK ACK\n');
-                for (int i = 0; i < 10; i++) {
-                    myPort.write(i);
-                    delay(250);
-                }
+                myPort.write(ack);
+                // for (int i = 0; i < 10; i++) {
+                //     myPort.write(i);
+                //     delay(250);
+                // }
             } else {
                 Serial.println(received);
             }
