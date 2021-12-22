@@ -27,7 +27,7 @@ uint8_t servoD7currentPosition = 0;
 
 void setup() {
     Serial.begin(115200); // Standard hardware serial port, for debugging
-    myPort.begin(57600);
+    myPort.begin(57600);  // Doesn't seem to be an issue with faster baud rates
     // myPort.begin(9600, SWSERIAL_8N1, D6, D6, false, 256);
     if (!myPort) {
         Serial.println("Invalid SoftwareSerial config");
@@ -106,6 +106,8 @@ void parseSerialCommandsAndDriveServos() {
     if (myPort.available() > 0) {
         // read incoming. append to capture string
         incomingChar = myPort.read();
+        // FIXME: Replace received with a char array here, shouldn't
+        //        really be using Strings for this, it can blow up badly.
         received += incomingChar;
 
         // Check if we have a newline termminator
@@ -122,6 +124,8 @@ void parseSerialCommandsAndDriveServos() {
             Serial.println(servoD7nextPosition);
 
             // Move the servos, if they need moving
+            // (check needed to avoid jitter and stallout from repeatedly
+            // writing the same destination to a servo, which apparently is Bad)
             if (servoD5nextPosition != servoD5currentPosition) {
                 servoD5.write(servoD5nextPosition);
                 servoD5currentPosition = servoD5nextPosition;
