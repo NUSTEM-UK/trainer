@@ -21,11 +21,13 @@ static const uint8_t servoD5Pin = D5;
 static const uint8_t servoD7Pin = D7;
 uint8_t servoD5nextPosition = 0;
 uint8_t servoD7nextPosition = 0;
+uint8_t servoD5currentPosition = 0;
+uint8_t servoD7currentPosition = 0;
 
 
 void setup() {
     Serial.begin(115200); // Standard hardware serial port, for debugging
-    myPort.begin(9600);
+    myPort.begin(57600);
     // myPort.begin(9600, SWSERIAL_8N1, D6, D6, false, 256);
     if (!myPort) {
         Serial.println("Invalid SoftwareSerial config");
@@ -45,16 +47,14 @@ void setup() {
 
 void loop() {
 
-    // Update the servos anyway, they'll run out their queues.
-    ConnectMessenger.updateServos();
-
     if (!isSerialZombie) {
+        // Update the servos anyway, they'll run out their queues.
+        ConnectMessenger.updateServos();
         goAboutYourBusiness();
         checkSerialConnection();
     } else {
         parseSerialCommandsAndDriveServos();
     }
-
 
 }
 
@@ -75,12 +75,20 @@ void checkSerialConnection() {
                 myPort.write(ack);
                 // Let the world know we're a zombie
                 isSerialZombie = true;
+                // servoD5.detach();
+                // servoD7.detach();
+                // Make sure the servos don't time out on us.
+                // servoD5.keepActive();
+                // servoD7.keepActive();
                 // Short delay to give servos time to run out a bit
                 delay(500);
+                // Clear the capture string
+                // Can't do this at the top of the function since we may not
+                // grab the whole command in one pass.
                 received = "";
             } else {
                 Serial.println(received);
-                Serial.println("We missed the ACK");
+                Serial.println("Missed ACK, reset and try again");
                 // Reset the capture string
                 received = "";
             }
@@ -89,27 +97,46 @@ void checkSerialConnection() {
 }
 
 void parseSerialCommandsAndDriveServos() {
-    Serial.println("We're a zombie");
-    delay(1000);
+    // Serial.println("We're a zombie");
+    // TODO: Empty servo queues here
+    //       Needs handler in ConnectMessenger
+    // delay(1000);
 
-    // // Reset the capture string
-    // received += incomingChar;
-    // // Get commands
-    // if (myPort.available() > 0) {
-    //     // read incoming. append to capture string
-    //     incomingChar = myPort.read();
+    // Get commands
+    if (myPort.available() > 0) {
+        // read incoming. append to capture string
+        incomingChar = myPort.read();
+        received += incomingChar;
 
-    //     // Check if we have a newline termminator
-    //     if (incomingChar == '\n') {
-    //         // Remove that closing newline from the assembled string
-    //         received.trim();
-    //         // Now parse the received string
-    //         Serial.println(received);
-    //         // Reset the capture string
-    //         // Let the world know we're a zombie
-    //         return;
-    //     }
-    // }
+        // Check if we have a newline termminator
+        if (incomingChar == '\n') {
+            // Remove that closing newline from the assembled string
+            received.trim();
+            // Now parse the received string
+            Serial.print(received);
+            Serial.print(": parsed as : ");
+            servoD5nextPosition = received.substring(0, 3).toInt();
+            servoD7nextPosition = received.substring(4, 7).toInt();
+            Serial.print(servoD5nextPosition);
+            Serial.print(";");
+            Serial.println(servoD7nextPosition);
+
+            // Move the servos, if they need moving
+            if (servoD5nextPosition != servoD5currentPosition) {
+                servoD5.write(servoD5nextPosition);
+                servoD5currentPosition = servoD5nextPosition;
+            }
+            if (servoD7nextPosition != servoD7currentPosition) {
+                servoD7.write(servoD7nextPosition);
+                servoD7currentPosition = servoD7nextPosition;
+            }
+            delay(10);
+
+            // Reset the capture string
+            received = "";
+
+        }
+    }
 }
 
 void goAboutYourBusiness() {
