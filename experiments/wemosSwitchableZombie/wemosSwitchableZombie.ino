@@ -49,31 +49,22 @@ void loop() {
     ConnectMessenger.updateServos();
 
     if (!isSerialZombie) {
-        // Standard ConnectServo stuff
-
-        // Check if servoD5 has stopped
-        if (!servoD5.isMovingAndCallYield()) {
-            // Set servo moving again, at random speed
-            servoD5.queueEaseTo(servoD5nextPosition, EASE_CUBIC_IN_OUT, random(20, 150));
-            // Flip end position
-            servoD5nextPosition = 180-servoD5nextPosition;
-        }
-        // Check if servoD7 has stopped
-        if (!servoD7.isMovingAndCallYield()) {
-            // Set servo moving again, at random speed
-            servoD7.queueEaseTo(servoD7nextPosition, EASE_CUBIC_IN_OUT, random(20, 150));
-            // Flip end position
-            servoD7nextPosition = 180-servoD7nextPosition;
-        }
+        goAboutYourBusiness();
+        checkSerialConnection();
+    } else {
+        parseSerialCommandsAndDriveServos();
     }
 
-    // Check if we have a character incoming
+
+}
+
+void checkSerialConnection() {
     if (myPort.available() > 0) {
-        // Read incoming, and append to capture string
+        // read incoming. append to capture string
         incomingChar = myPort.read();
         received += incomingChar;
 
-        // Check if we have a newline terminator
+        // Check if we have a newline termminator
         if (incomingChar == '\n') {
             // Remove that closing newline from the assembled string
             received.trim();
@@ -81,17 +72,61 @@ void loop() {
             if (received == "ACK") {
                 Serial.print(received);
                 Serial.println(" >>> CEDING CONTROL");
-                isSerialZombie = true;
                 myPort.write(ack);
-                // for (int i = 0; i < 10; i++) {
-                //     myPort.write(i);
-                //     delay(250);
-                // }
+                // Let the world know we're a zombie
+                isSerialZombie = true;
+                // Short delay to give servos time to run out a bit
+                delay(500);
+                received = "";
             } else {
                 Serial.println(received);
+                Serial.println("We missed the ACK");
+                // Reset the capture string
+                received = "";
             }
-            // Reset the capture string
-            received = "";
         }
     }
 }
+
+void parseSerialCommandsAndDriveServos() {
+    Serial.println("We're a zombie");
+    delay(1000);
+
+    // // Reset the capture string
+    // received += incomingChar;
+    // // Get commands
+    // if (myPort.available() > 0) {
+    //     // read incoming. append to capture string
+    //     incomingChar = myPort.read();
+
+    //     // Check if we have a newline termminator
+    //     if (incomingChar == '\n') {
+    //         // Remove that closing newline from the assembled string
+    //         received.trim();
+    //         // Now parse the received string
+    //         Serial.println(received);
+    //         // Reset the capture string
+    //         // Let the world know we're a zombie
+    //         return;
+    //     }
+    // }
+}
+
+void goAboutYourBusiness() {
+    // Standard ConnectServo stuff
+    // Check if servoD5 has stopped
+    if (!servoD5.isMovingAndCallYield()) {
+        // Set servo moving again, at random speed
+        servoD5.queueEaseTo(servoD5nextPosition, EASE_CUBIC_IN_OUT, random(20, 150));
+        // Flip end position
+        servoD5nextPosition = 180-servoD5nextPosition;
+    }
+    // Check if servoD7 has stopped
+    if (!servoD7.isMovingAndCallYield()) {
+        // Set servo moving again, at random speed
+        servoD7.queueEaseTo(servoD7nextPosition, EASE_CUBIC_IN_OUT, random(20, 150));
+        // Flip end position
+        servoD7nextPosition = 180-servoD7nextPosition;
+    }
+}
+
