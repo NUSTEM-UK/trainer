@@ -108,6 +108,8 @@ void parseSerialCommandsAndDriveServos() {
         incomingChar = myPort.read();
         // FIXME: Replace received with a char array here, shouldn't
         //        really be using Strings for this, it can blow up badly.
+        //        See discussion of sscanf() here:
+        //        https://forum.arduino.cc/t/arduino-sscanf/309063/6
         received += incomingChar;
 
         // Check if we have a newline termminator
