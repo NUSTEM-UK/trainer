@@ -1,7 +1,19 @@
 import picodisplay as display
 import utime
-import gc
-import machine
+
+from rotary_irq_rp2 import RotaryIRQ
+
+# Create Rotary object
+r = RotaryIRQ(pin_num_clk=21,
+              pin_num_dt=22,
+              min_val=0,
+              max_val=180,
+              reverse=False,
+              range_mode=RotaryIRQ.RANGE_BOUNDED,
+              pull_up=False,
+              half_step=True)
+
+val_old = r.value()
 
 # Set up and initialise Pico Display
 buf = bytearray(display.get_width() * display.get_height() * 2)
@@ -216,7 +228,16 @@ def button_checker():
                 button_y = 1
             button_pressed = utime.ticks_ms()
 
+def rotary_checker():
+    global button_a
+    global button_b
+    global button_x
+    global button_y
 
+    total = button_y + button_x + button_a + button_b
+
+    if total > 0:
+        
 
 while True:
     button_checker()
