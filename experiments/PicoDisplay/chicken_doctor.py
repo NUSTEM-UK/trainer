@@ -104,6 +104,11 @@ button_x = 0
 button_b = 0
 button_y = 0
 
+# button timer
+button_pressed = utime.ticks_ms()
+button_wait = 500
+
+
 print (start_time)
 print (end_time)
 
@@ -154,61 +159,62 @@ def button_checker():
     global button_b
     global button_x
     global button_y
+    global button_pressed
 
     total = button_y + button_x + button_a + button_b
 
-    if display.is_pressed(display.BUTTON_A): 
-        if total == 0:
-            button_a = 1
-            print("A pressed")                                    
-            print(button_a)
-        else:
+    if (utime.ticks_ms() - button_pressed) > 500:
+        if display.is_pressed(display.BUTTON_A):
             if button_a == 1:
                 button_a = 0
-                print("A pressed")                                    
-                print(button_a)
-
-        #debounce
-        utime.sleep_ms(500)
-    
-    if display.is_pressed(display.BUTTON_B):              # if a button press is detected then...   
-        if total == 0:
-            button_b = 1
-            print("B pressed")                                    
-            print(button_b)
-        else:
+            elif button_b == 1 or button_y == 1 or button_x == 1:
+                button_a = 1
+                button_b = 0
+                button_x = 0
+                button_y = 0
+                print("A pressed") 
+            else:
+                button_a = 1
+            button_pressed = utime.ticks_ms()
+        
+        if display.is_pressed(display.BUTTON_B):              # if a button press is detected then...   
             if button_b == 1:
                 button_b = 0
-                print("B pressed")                                    
-                print(button_b)
-        #debounce
-        utime.sleep_ms(500)
-    if display.is_pressed(display.BUTTON_X):              # if a button press is detected then...   
-        if total == 0:
-            button_x = 1
-            print("X pressed")                                    
-            print(button_x)
-        else:
+            elif button_a == 1 or button_y == 1 or button_x == 1:
+                button_a = 0
+                button_b = 1
+                button_x = 0
+                button_y = 0
+                print("B pressed") 
+            else:
+                button_b = 1
+            button_pressed = utime.ticks_ms()
+
+        if display.is_pressed(display.BUTTON_X):              # if a button press is detected then...   
             if button_x == 1:
                 button_x = 0
-                print("X pressed")                                    
-                print(button_x)
-
-        #debounce
-        utime.sleep_ms(500)
-    
-    if display.is_pressed(display.BUTTON_Y):              # if a button press is detected then...   
-        if total == 0:
-            button_y = 1
-            print("Y pressed")                                    
-            print(button_y)
-        else:
+            elif button_b == 1 or button_y == 1 or button_a == 1:
+                button_a = 0
+                button_b = 0
+                button_x = 1
+                button_y = 0
+                print("X pressed") 
+            else:
+                button_x = 1
+            button_pressed = utime.ticks_ms()
+        
+        if display.is_pressed(display.BUTTON_Y):              # if a button press is detected then...   
             if button_y == 1:
                 button_y = 0
-                print("Y pressed")                                    
-                print(button_y)
-        #debounce
-        utime.sleep_ms(500)
+            elif button_b == 1 or button_a == 1 or button_x == 1:
+                button_a = 0
+                button_b = 0
+                button_x = 0
+                button_y = 1
+                print("Y pressed") 
+            else:
+                button_y = 1
+            button_pressed = utime.ticks_ms()
 
 
 
