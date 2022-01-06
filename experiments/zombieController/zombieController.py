@@ -42,9 +42,10 @@ if __name__ == '__main__':
             # uart1.write(str(servo1pos) + ',' + str(servo2pos) + '\n')
             # Pad strings we send so we get expected number of digits
             uart1.write(f'{servo1pos:03}' + ',' + f'{servo2pos:03}' + '\n')
+            # print(servo1pos, servo2pos)
+            print(f'{servo1pos:03}' + ',' + f'{servo2pos:03}')
             servo1pos = (servo1pos + 5) % 180
             servo2pos = (servo2pos - 5) % 180
-            print(servo1pos, servo2pos)
             utime.sleep(delayShort)
             # In principle we could poll here for some sort
             # of response, and set isHarbinger to False if it's
