@@ -127,6 +127,10 @@ button_wait = 500
 rotary_moved = utime.ticks_ms()
 rotary_wait = 60        # debounce in ms
 
+# set serial connection flags
+waiting_for_connection = True
+is_connected = False
+
 # update function - how long has passed since last update, and where should we be now
 def update_animation():
     display.set_pen(0, 0, 0)
@@ -301,9 +305,21 @@ def rotary_checker():
                 if servo2_x_start < servo2_x_end and servo2_x_end <= 180:
                     servo2_x_end = servo2_x_end - 1
                 val_old = val_new      
-        
+
+# def connection_checker()
+#     global waiting_for_connection
+#     global is_connected
+
+#     if waiting_for_connection:
+#         uart1.write('ACK\n')
+#         print("ACK")
+#         # make the connection
+#     else:
+#         # remain connected        
 
 while True:
+    # while waiting_for_connection:
+    #     getConnection()
     button_checker()
     rotary_checker()
     update_animation()
