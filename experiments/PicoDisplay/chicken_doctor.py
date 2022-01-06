@@ -1,19 +1,21 @@
 import picodisplay as display
 import utime
 
+# Need to upload rotary_irq_rp2.py and rotary.py to the pico
 from rotary_irq_rp2 import RotaryIRQ
 
 # Create Rotary object
 r = RotaryIRQ(pin_num_clk=21,
               pin_num_dt=22,
-              min_val=0,
-              max_val=180,
+              min_val=-5000,
+              max_val=+5000,
               reverse=False,
-              range_mode=RotaryIRQ.RANGE_BOUNDED,
+              range_mode=RotaryIRQ.RANGE_WRAP, # set wrap, as range starts at min_val
               pull_up=False,
               half_step=True)
 
 val_old = r.value()
+val_new = r.value()
 
 # Set up and initialise Pico Display
 buf = bytearray(display.get_width() * display.get_height() * 2)
@@ -43,6 +45,7 @@ def backround_draw(top_left, top_right, bottom_left, bottom_right):
     global button_x
     global button_y
 
+    # colours chosen depending on which button has been pressed
     if button_a == 1:
         display.set_pen(0,255,0)
     else:
@@ -97,9 +100,9 @@ x_angle_max = 180
 cycle_time = 5000
 
 # set default angles for for the two servos - default swing between 0 and 180
-servo1_x_start = 30
+servo1_x_start = 0
 servo1_x_current = servo1_x_start
-servo1_x_end = 100
+servo1_x_end = 180
 
 servo2_x_start = 0
 servo2_x_current = servo2_x_start
@@ -120,9 +123,9 @@ button_y = 0
 button_pressed = utime.ticks_ms()
 button_wait = 500
 
-
-print (start_time)
-print (end_time)
+# rotary debounce timer
+rotary_moved = utime.ticks_ms()
+rotary_wait = 60        # debounce in ms
 
 # update function - how long has passed since last update, and where should we be now
 def update_animation():
@@ -131,6 +134,13 @@ def update_animation():
     global start_time
     global end_time
     global now_time
+
+    global servo1_x_start
+    global servo1_x_end
+
+    global servo2_x_start
+    global servo2_x_end
+
     # get the current time
     now_time = utime.ticks_ms()
 
@@ -138,31 +148,36 @@ def update_animation():
     done_so_far = (now_time - start_time)/(end_time - start_time)
 
     # are we on the way up, or headed back down 
-
     if done_so_far < 0.5:
         # we're on the way up, as 1.0 would be a full cycle
         # use that proportion to work out where we should be angularly
-        current_angle = servo1_x_start + (done_so_far * 2 * (servo1_x_end - servo1_x_start))
-
+        current_angle_top = servo1_x_start + (done_so_far * 2 * (servo1_x_end - servo1_x_start))
+        current_angle_bottom = servo2_x_start + (done_so_far * 2 * (servo2_x_end - servo2_x_start))
         # then use the angle to work out the pixl position of where we are
-        current_pixel = int(x_min + (current_angle / x_angle_max) * (x_max - x_min))
+        current_pixel_top = int(x_min + (current_angle_top / x_angle_max) * (x_max - x_min))
+        current_pixel_bottom = int(x_min + (current_angle_bottom / x_angle_max) * (x_max - x_min))
 
     elif 1.0 >= done_so_far >= 0.5:
         # we back the way down
         done_so_far = 1 - done_so_far
 
-        current_angle = servo1_x_start + (done_so_far * 2 * (servo1_x_end - servo1_x_start))
-
+        current_angle_top = servo1_x_start + (done_so_far * 2 * (servo1_x_end - servo1_x_start))
+        current_angle_bottom = servo2_x_start + (done_so_far * 2 * (servo2_x_end - servo2_x_start))
         # then use the angle to work out the pixl position of where we are
-        current_pixel = int(x_min + (current_angle / x_angle_max) * (x_max - x_min))
+        current_pixel_top = int(x_min + (current_angle_top / x_angle_max) * (x_max - x_min))
+        current_pixel_bottom = int(x_min + (current_angle_bottom / x_angle_max) * (x_max - x_min))
     else:
         # we've completed the cycle, so set new start and end times
         start_time = now_time
         end_time = start_time + cycle_time
-        current_angle = servo1_x_start
-        current_pixel = int(x_min + (current_angle / x_angle_max) * (x_max - x_min))
+        current_angle_top = servo1_x_start
+        current_angle_bottom = servo2_x_start
+        current_pixel_top = int(x_min + (current_angle_top / x_angle_max) * (x_max - x_min))
+        current_pixel_bottom = int(x_min + (current_angle_bottom / x_angle_max) * (x_max - x_min))
+    
     backround_draw(servo1_x_start, servo1_x_end, servo2_x_start, servo2_x_end)
-    draw_char(current_pixel-6, 38, up_arrow)
+    draw_char(current_pixel_top-6, 38, up_arrow)
+    draw_char(current_pixel_bottom-6, 88, down_arrow)
 
     display.update()
 
@@ -234,13 +249,63 @@ def rotary_checker():
     global button_x
     global button_y
 
+    global servo1_x_start
+    global servo1_x_end
+
+    global servo2_x_start
+    global servo2_x_end
+
+    global rotary_moved
+
+    global val_new
+    global val_old
+
     total = button_y + button_x + button_a + button_b
 
-    if total > 0:
+    if total > 0 and (utime.ticks_ms() - rotary_moved) > 30:
+        rotary_moved = utime.ticks_ms()
+        val_new = r.value()
+        if button_a > 0:
+            if val_new > val_old:
+                if servo1_x_start < servo1_x_end and servo1_x_start >= 0:
+                    servo1_x_start = servo1_x_start + 1
+                val_old = val_new
+            elif val_new < val_old:
+                if servo1_x_start <= servo1_x_end and servo1_x_start > 0:
+                    servo1_x_start = servo1_x_start - 1
+                val_old = val_new
+        elif button_x > 0:
+            if val_new > val_old:
+                if servo1_x_start <= servo1_x_end and servo1_x_end < 180:
+                    servo1_x_end = servo1_x_end + 1
+                val_old = val_new
+            elif val_new < val_old:
+                if servo1_x_start < servo1_x_end and servo1_x_end <= 180:
+                    servo1_x_end = servo1_x_end - 1
+                val_old = val_new
+        elif button_b > 0:
+            if val_new > val_old:
+                if servo2_x_start < servo2_x_end and servo2_x_start >= 0:
+                    servo2_x_start = servo2_x_start + 1
+                val_old = val_new
+            elif val_new < val_old:
+                if servo2_x_start <= servo2_x_end and servo2_x_start > 0:
+                    servo2_x_start = servo2_x_start - 1
+                val_old = val_new
+        else:
+            if val_new > val_old:
+                if servo2_x_start <= servo2_x_end and servo2_x_end < 180:
+                    servo2_x_end = servo2_x_end + 1
+                val_old = val_new
+            elif val_new < val_old:
+                if servo2_x_start < servo2_x_end and servo2_x_end <= 180:
+                    servo2_x_end = servo2_x_end - 1
+                val_old = val_new      
         
 
 while True:
     button_checker()
+    rotary_checker()
     update_animation()
     utime.sleep_ms(10)
 
