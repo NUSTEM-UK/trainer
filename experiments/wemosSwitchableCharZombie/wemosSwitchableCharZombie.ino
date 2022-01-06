@@ -133,6 +133,12 @@ void parseSerialCommandsAndDriveServos() {
             // Now parse the received string
             Serial.print(received);
             Serial.print(": parsed as : ");
+            // FIXME: This explodes with a core dump. @WILLNOTFIX
+            // I'm going to bail on this effort here, because it's not worth the effort.
+            // If I ever need to revisit, pretty sure there's a helpful example here:
+            // https://jeffpar.github.io/kbarchive/kb/038/Q38335/
+            // ...but for now I'm going to stick with actual String handling,
+            // rather than 1980s character arrays. Life is too short.
             sscanf(received, "%03d,%03d", servoD5nextPosition, servoD7nextPosition);
             // servoD5nextPosition = received.substring(0, 3).toInt();
             // servoD7nextPosition = received.substring(4, 7).toInt();
