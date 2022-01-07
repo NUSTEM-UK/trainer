@@ -4,7 +4,7 @@ from machine import UART, Pin
 import utime
 
 # self.uart = UART(uartNum, 9600, parity=None, stop=1, bits=8, rx=rxPin, tx=txPin)
-uart1 = UART(1, baudrate=9600, tx=Pin(4), rx=Pin(5))
+uart1 = UART(1, baudrate=57600, tx=Pin(4), rx=Pin(5))
 
 while True:
     print('Awaiting Input')

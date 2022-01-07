@@ -3,8 +3,12 @@
 #include "ConnectServo.h"
 
 // Serial control setup
-#define RX_PIN D2
-#define TX_PIN D1
+// Wemos D1
+// #define RX_PIN D2
+// #define TX_PIN D1
+// Kniwwelino
+#define RX_PIN D6
+#define TX_PIN D0
 SoftwareSerial myPort(RX_PIN, TX_PIN, false, 256);
 bool isSerialZombie = false;
 
@@ -73,7 +77,11 @@ void checkSerialConnection() {
             if (received == "ACK") {
                 Serial.print(received);
                 Serial.println(" >>> CEDING CONTROL");
-                myPort.write(ack);
+                delay(100);
+                // myPort.write(ack);
+                myPort.write("ACK ACK ACK");
+                Serial.println(ack);
+
                 // Let the world know we're a zombie
                 isSerialZombie = true;
                 // servoD5.detach();
