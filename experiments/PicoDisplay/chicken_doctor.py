@@ -1,3 +1,4 @@
+from machine import UART, Pin
 import picodisplay as display
 import utime
 
@@ -16,6 +17,15 @@ r = RotaryIRQ(pin_num_clk=21,
 
 val_old = r.value()
 val_new = r.value()
+
+# Configure UART serial connection
+
+uart1 = UART(1, baudrate=57600, tx=Pin(4), rx=Pin(5))
+serial_delay = 0.5
+serial_delay_short = 0.1
+
+waiting_for_connection = True
+is_connected = False
 
 # Set up and initialise Pico Display
 buf = bytearray(display.get_width() * display.get_height() * 2)
@@ -51,22 +61,22 @@ def backround_draw(top_left, top_right, bottom_left, bottom_right):
     else:
         display.set_pen(255,255,0)
     display.text(str(top_left), 10, 25,200)
-    
+
     if button_x == 1:
         display.set_pen(0,255,0)
     else:
-        display.set_pen(255,255,0)    
+        display.set_pen(255,255,0)
     display.text(str(top_right), 200, 25,200)
     if button_b == 1:
         display.set_pen(0,255,0)
     else:
         display.set_pen(255,255,0)
     display.text(str(bottom_left), 10, 100,200)
-    
+
     if button_y == 1:
         display.set_pen(0,255,0)
     else:
-        display.set_pen(255,255,0)    
+        display.set_pen(255,255,0)
     display.text(str(bottom_right), 200, 100,200)
     #Draw the Top Horizontal Scale
     display.set_pen(255,255,255)
@@ -76,7 +86,7 @@ def backround_draw(top_left, top_right, bottom_left, bottom_right):
     display.pixel_span(50,106,140)
 
     #calculate the pixel positions of the ticks
-    top_interval = [top_left, top_right] 
+    top_interval = [top_left, top_right]
     bottom_interval = [bottom_left, bottom_right]
 
     top_absolutes = (int(50 + ((top_interval[0]/180)*140)), int(50 + ((top_interval[1]/180)*140)))
@@ -108,10 +118,13 @@ servo2_x_start = 0
 servo2_x_current = servo2_x_start
 servo2_x_end = 180
 
+current_angle_top = 0
+current_angle_bottom = 0
+
 # define inital start and end times
 start_time = utime.ticks_ms()
 end_time = start_time + cycle_time
-now_time = start_time 
+now_time = start_time
 
 # set flags for button pressing
 button_a = 0
@@ -133,6 +146,8 @@ is_connected = False
 
 # update function - how long has passed since last update, and where should we be now
 def update_animation():
+    global current_angle_top
+    global current_angle_bottom
     display.set_pen(0, 0, 0)
     display.clear()
     global start_time
@@ -151,7 +166,7 @@ def update_animation():
     # now_time as a proportion of the total cycle time
     done_so_far = (now_time - start_time)/(end_time - start_time)
 
-    # are we on the way up, or headed back down 
+    # are we on the way up, or headed back down
     if done_so_far < 0.5:
         # we're on the way up, as 1.0 would be a full cycle
         # use that proportion to work out where we should be angularly
@@ -178,8 +193,9 @@ def update_animation():
         current_angle_bottom = servo2_x_start
         current_pixel_top = int(x_min + (current_angle_top / x_angle_max) * (x_max - x_min))
         current_pixel_bottom = int(x_min + (current_angle_bottom / x_angle_max) * (x_max - x_min))
-    
+
     backround_draw(servo1_x_start, servo1_x_end, servo2_x_start, servo2_x_end)
+    display.set_pen(255, 0, 0)
     draw_char(current_pixel_top-6, 38, up_arrow)
     draw_char(current_pixel_bottom-6, 88, down_arrow)
 
@@ -203,12 +219,12 @@ def button_checker():
                 button_b = 0
                 button_x = 0
                 button_y = 0
-                print("A pressed") 
+                print("A pressed")
             else:
                 button_a = 1
             button_pressed = utime.ticks_ms()
-        
-        if display.is_pressed(display.BUTTON_B):              # if a button press is detected then...   
+
+        if display.is_pressed(display.BUTTON_B):              # if a button press is detected then...
             if button_b == 1:
                 button_b = 0
             elif button_a == 1 or button_y == 1 or button_x == 1:
@@ -216,12 +232,12 @@ def button_checker():
                 button_b = 1
                 button_x = 0
                 button_y = 0
-                print("B pressed") 
+                print("B pressed")
             else:
                 button_b = 1
             button_pressed = utime.ticks_ms()
 
-        if display.is_pressed(display.BUTTON_X):              # if a button press is detected then...   
+        if display.is_pressed(display.BUTTON_X):              # if a button press is detected then...
             if button_x == 1:
                 button_x = 0
             elif button_b == 1 or button_y == 1 or button_a == 1:
@@ -229,12 +245,12 @@ def button_checker():
                 button_b = 0
                 button_x = 1
                 button_y = 0
-                print("X pressed") 
+                print("X pressed")
             else:
                 button_x = 1
             button_pressed = utime.ticks_ms()
-        
-        if display.is_pressed(display.BUTTON_Y):              # if a button press is detected then...   
+
+        if display.is_pressed(display.BUTTON_Y):              # if a button press is detected then...
             if button_y == 1:
                 button_y = 0
             elif button_b == 1 or button_a == 1 or button_x == 1:
@@ -242,7 +258,7 @@ def button_checker():
                 button_b = 0
                 button_x = 0
                 button_y = 1
-                print("Y pressed") 
+                print("Y pressed")
             else:
                 button_y = 1
             button_pressed = utime.ticks_ms()
@@ -304,24 +320,51 @@ def rotary_checker():
             elif val_new < val_old:
                 if servo2_x_start < servo2_x_end and servo2_x_end <= 180:
                     servo2_x_end = servo2_x_end - 1
-                val_old = val_new      
+                val_old = val_new
 
-# def connection_checker()
-#     global waiting_for_connection
-#     global is_connected
+def connection_checker():
+    global waiting_for_connection
+    global is_connected
+    global current_angle_top
+    global current_angle_bottom
 
-#     if waiting_for_connection:
-#         uart1.write('ACK\n')
-#         print("ACK")
-#         # make the connection
-#     else:
-#         # remain connected        
+    if waiting_for_connection:
+        uart1.write('ACK\n')
+        print("ACK")
+        print("Checking for response...")
+        if uart1.any() > 0:
+            received = uart1.read().decode()
+            print("response received")
+            print(received)
+            if received == "ACK ACK ACK":
+                print('RESPONDED:' + received)
+                print('>>> ASSUMING DIRECT CONTROL <<<')
+                utime.sleep(serial_delay)
+                print('>>> I HAVE CONTROL <<<')
+                is_connected = True
+                waiting_for_connection = False
+        # if we haven't had any response, pause briefly and exit
+        utime.sleep(serial_delay)
 
-while True:
-    # while waiting_for_connection:
-    #     getConnection()
-    button_checker()
-    rotary_checker()
-    update_animation()
-    utime.sleep_ms(10)
+
+if __name__ == '__main__':
+    while True:
+        # while waiting_for_connection:
+        button_checker()
+        rotary_checker()
+        update_animation()
+        if is_connected:
+            # Pad strings we send so we get expected number of digits
+            uart1.write(f'{current_angle_top:03}' + ',' + f'{current_angle_bottom:03}' + '\n')
+            # print(servo1pos, servo2pos)
+            print(f'{current_angle_top:03}' + ',' + f'{current_angle_bottom:03}')
+
+            # In principle we could poll here for some sort
+            # of response, and set is_connected to False if it's
+            # not found for some time. Then next pass we'd fall into
+            # the else block below, and go back to looking for a connection.
+        else:
+            connection_checker()
+
+        utime.sleep_ms(100)
 
