@@ -355,9 +355,12 @@ if __name__ == '__main__':
         update_animation()
         if is_connected:
             # Pad strings we send so we get expected number of digits
-            uart1.write(f'{current_angle_top:03}' + ',' + f'{current_angle_bottom:03}' + '\n')
+            # Compute this once, since we're outputting it to serial twice.
+            # Note also cast to int, since current_angle_x is a float.
+            send_string = f'{int(current_angle_top):03}' + ',' + f'{int(current_angle_bottom):03}'
+            uart1.write(send_string + '\n')
             # print(servo1pos, servo2pos)
-            print(f'{current_angle_top:03}' + ',' + f'{current_angle_bottom:03}')
+            print(send_string)
 
             # In principle we could poll here for some sort
             # of response, and set is_connected to False if it's
@@ -366,5 +369,5 @@ if __name__ == '__main__':
         else:
             connection_checker()
 
-        utime.sleep_ms(100)
+        utime.sleep_ms(50)
 
