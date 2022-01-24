@@ -209,21 +209,13 @@ if __name__ == '__main__':
 
     button_mapping = {
         display.BUTTON_A: {
-            "object": servoD5,
-            "method": "min_position_setting_toggle"
-        },
+            "object": servoD5, "method": "min_position_setting_toggle" },
         display.BUTTON_X: {
-            "object": servoD5,
-            "method": "max_position_setting_toggle"
-        },
+            "object": servoD5, "method": "max_position_setting_toggle" },
         display.BUTTON_B: {
-            "object": servoD7,
-            "method": "min_position_setting_toggle"
-        },
+            "object": servoD7, "method": "min_position_setting_toggle" },
         display.BUTTON_Y: {
-            "object": servoD7,
-            "method": "max_position_setting_toggle"
-        }
+            "object": servoD7, "method": "max_position_setting_toggle" }
     }
 
     buttons = ButtonController(button_mapping, debounce_interval=500)
