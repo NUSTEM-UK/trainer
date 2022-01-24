@@ -40,12 +40,38 @@ def rescale(x, in_min, in_max, out_min, out_max):
     """Rescale a value from one range to another."""
     return int((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
 
+
 def zfl(s, width):
     """Pads string with leading zeros.
 
     From https://stackoverflow.com/questions/63271522/is-there-a-zfill-type-function-in-micro-python-zfill-in-micro-python
     There's no zfill() in Micropython."""
     return '{:0>{w}}'.format(s, w=width)
+
+
+def connection_check():
+    global waiting_for_connection
+    global is_connected
+    global serial_delay
+
+    if waiting_for_connection:
+        uart1.write('ACK\n')
+        print("ACK")
+        print("Checking for response...")
+        if uart1.any() > 0:
+            # FIXME: Wrap this is a try/catch, it can error out and cause a crash.
+            received = uart1.read().decode()
+            print("response received")
+            print(received)
+            if received == "ACK ACK ACK":
+                print('RESPONDED:' + received)
+                print('>>> ASSUMING DIRECT CONTROL <<<')
+                utime.sleep(serial_delay)
+                print('>>> I HAVE CONTROL <<<')
+                is_connected = True
+                waiting_for_connection = False
+        # if we haven't had any response, pause briefly and exit
+        utime.sleep(serial_delay)
 
 class ServoController:
     """Visual and serial interface for servo control.
@@ -135,7 +161,7 @@ class ServoController:
 
         Keep it within bounds.
         """
-        print(">>> Incrementing")
+        # print(">>> Incrementing")
         if self.min_position_being_updated:
             self.min_angle += 1
         if self.min_angle > 180:
@@ -150,10 +176,10 @@ class ServoController:
         if self.min_angle > self.max_angle:
             self.max_angle = self.min_angle
 
-        print(f"[{self.min_angle}, {self.max_angle}]")
+        # print(f"[{self.min_angle}, {self.max_angle}]")
 
     def decrement_value(self):
-        """Decremnt whatever we're decrementing.
+        """Decrement whatever we're decrementing.
 
         Keep it within bounds.
         """
@@ -251,15 +277,14 @@ class RotaryController():
                 self._old_value = self._new_value
                 for object in self._mapping:
                     getattr(object, self._mapping[object]['inc_method'])()
-                    print("Incrementing")
-                    print(object, self._mapping[object]['inc_method'])
+                    # print("Incrementing")
+                    # print(object, self._mapping[object]['inc_method'])
             if self._new_value < self._old_value:
                 self._old_value = self._new_value
                 for object in self._mapping:
                     # Note the (): you still have to call the method once you've found it.
                     getattr(object, self._mapping[object]['dec_method'])()
-                    print("Decrementing")
-
+                    # print("Decrementing")
 
 
 if __name__ == '__main__':
@@ -275,6 +300,15 @@ if __name__ == '__main__':
 
     servoD7 = ServoController(speed=60, vertical_offset=90, marker=down_arrow, marker_offset=-25)
 
+    # For some reason, we need to draw everything once, or the methods error out in the loop. weird.
+    display.set_pen(0, 0, 0)
+    display.clear()
+    servoD5.draw()
+    servoD7.draw()
+    display.update()
+
+    # Setting up callbacks for buttons and rotary encoder.
+    # This is for the main screen: later modes will pass their own sets here.
     button_mapping = {
         display.BUTTON_A: {
             "object": servoD5, "method": "min_position_setting_toggle" },
@@ -285,7 +319,6 @@ if __name__ == '__main__':
         display.BUTTON_Y: {
             "object": servoD7, "method": "max_position_setting_toggle" }
     }
-
     buttons = ButtonController(button_mapping, debounce_interval=500)
 
     rotary_mapping = {
@@ -298,7 +331,6 @@ if __name__ == '__main__':
             "dec_method": "decrement_value"
         }
     }
-
     rotary = RotaryController(rotary_mapping)
 
     while True:
@@ -307,10 +339,20 @@ if __name__ == '__main__':
         servoD5.draw()
         servoD7.draw()
         display.update()
-        # servoD7.draw()
 
         servoD5.update()
         servoD7.update()
+
         buttons.check()
         rotary.check()
+
+        # Handle serial stuff
+        if is_connected:
+            send_string = f'{int(servoD5.angle):03}' + ',' + f'{int(servoD7.angle):03}'
+            # print(send_string)
+            uart1.write(send_string + '\n')
+        else:
+            connection_check()
+
+        utime.sleep_ms(20)
 
