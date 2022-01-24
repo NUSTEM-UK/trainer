@@ -1,6 +1,7 @@
 from machine import UART, Pin
 import picodisplay as display
 import utime
+# from picofont import cmap, printchar, printstring
 # Need to upload rotary_irq_rp2.py and rotary.py to the Pico
 from rotary_irq_rp2 import RotaryIRQ
 
@@ -14,8 +15,8 @@ r = RotaryIRQ(pin_num_clk=21,
               pull_up=False,
               half_step=True)
 
-val_old = r.value()
-val_new = r.value()
+encoder_val_old = r.value()
+encoder_val_new = r.value()
 
 # Configure UART serial connection
 
@@ -30,6 +31,10 @@ is_connected = False
 buf = bytearray(display.get_width() * display.get_height() * 2)
 display.init(buf)
 display.set_backlight(0.8)
+
+# Rotary encode debounce timer
+rotay_last_moved_time = utime.ticks_ms()
+rotary_wait = 60
 
 # Borrowed from Tony Goodhew's PicoDisplay example code
 up_arrow =[0,4,14,21,4,4,0,0]
@@ -106,6 +111,7 @@ class ServoController:
         # Set pen colour to green if being updated, else yellow
         display.set_pen(0, 255, 0) if self.min_position_being_updated else display.set_pen(255, 255, 0)
         display.text(zfl(str(self.min_angle), 3), 10, self.vertical_offset, 200)
+        # printstring(zfl(str(self.min_angle), 3), 10, self.vertical_offset, 1, False, False)
 
         # Display maximum angle
         display.set_pen(0, 255, 0) if self.max_position_being_updated else display.set_pen(255, 255, 0)
@@ -130,6 +136,17 @@ class ServoController:
         display.set_pen(255, 0, 0)
         draw_char(self._marker_pos, self.vertical_offset + 13 + self.marker_offset, self.marker)
 
+    def min_position_setting_toggle(self):
+        self.min_position_being_updated = not self.min_position_being_updated
+        # Deselect the other thing if appropriate
+        if self.min_position_being_updated:
+            self.max_position_being_updated = False
+
+    def max_position_setting_toggle(self):
+        self.max_position_being_updated = not self.max_position_being_updated
+        # Deselect the other thing if appropriate
+        if self.max_position_being_updated:
+            self.min_position_being_updated = False
 
     def update(self):
         """Update the servo position."""
@@ -152,9 +169,34 @@ class ServoController:
                 self._reversing = True
 
 
+class ButtonController:
+    """Poll buttons and dispatch events.
+
+    Takes a mapping dictionary of buttons, objects and method calls.
+    Polls the buttons and calls the appropriate method on the object.
+    Could instantiate a ButtonController object per menu mode.
+    """
+
+    def __init__(self, mapping, debounce_interval=500):
+        """Initialise the controller."""
+        self._mapping = mapping
+        self.debounce_interval = debounce_interval
+        self._time_last_checked = utime.ticks_ms()
+
+    def check(self):
+        """Check the buttons and call the appropriate method."""
+        # Check for button presses
+        for button in self._mapping:
+            if display.is_pressed(button) and utime.ticks_diff(utime.ticks_ms(), self._time_last_checked) > self.debounce_interval:
+                self._time_last_checked = utime.ticks_ms()
+                # Have to use getattr here for dynamic method call
+                getattr(self._mapping[button]['object'], self._mapping[button]['method'])()
+
+
 
 if __name__ == '__main__':
-    print("Starting")
+    print("Starting...")
+
     servoD5 = ServoController()
     servoD5.angle = 90
     print(servoD5.angle)
@@ -164,6 +206,27 @@ if __name__ == '__main__':
     print(servoD5.angle)
 
     servoD7 = ServoController(speed=60, vertical_offset=90, marker=down_arrow, marker_offset=-25)
+
+    button_mapping = {
+        display.BUTTON_A: {
+            "object": servoD5,
+            "method": "min_position_setting_toggle"
+        },
+        display.BUTTON_X: {
+            "object": servoD5,
+            "method": "max_position_setting_toggle"
+        },
+        display.BUTTON_B: {
+            "object": servoD7,
+            "method": "min_position_setting_toggle"
+        },
+        display.BUTTON_Y: {
+            "object": servoD7,
+            "method": "max_position_setting_toggle"
+        }
+    }
+
+    buttons = ButtonController(button_mapping, debounce_interval=500)
 
     while True:
         display.set_pen(0, 0, 0)
@@ -175,4 +238,5 @@ if __name__ == '__main__':
 
         servoD5.update()
         servoD7.update()
+        buttons.check()
 
