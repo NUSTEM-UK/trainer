@@ -5,21 +5,7 @@ import utime
 # Need to upload rotary_irq_rp2.py and rotary.py to the Pico
 from rotary_irq_rp2 import RotaryIRQ
 
-# Create Rotary object
-r = RotaryIRQ(pin_num_clk=21,
-              pin_num_dt=22,
-              min_val=-5000,
-              max_val=+5000,
-              reverse=False,
-              range_mode=RotaryIRQ.RANGE_WRAP, # set wrap, as range starts at min_val
-              pull_up=False,
-              half_step=True)
-
-encoder_val_old = r.value()
-encoder_val_new = r.value()
-
 # Configure UART serial connection
-
 uart1 = UART(1, baudrate=57600, tx=Pin(4), rx=Pin(5))
 serial_delay = 0.5
 serial_delay_short = 0.1
@@ -31,10 +17,6 @@ is_connected = False
 buf = bytearray(display.get_width() * display.get_height() * 2)
 display.init(buf)
 display.set_backlight(0.8)
-
-# Rotary encode debounce timer
-rotay_last_moved_time = utime.ticks_ms()
-rotary_wait = 60
 
 # Borrowed from Tony Goodhew's PicoDisplay example code
 up_arrow =[0,4,14,21,4,4,0,0]
@@ -148,6 +130,47 @@ class ServoController:
         if self.max_position_being_updated:
             self.min_position_being_updated = False
 
+    def increment_value(self):
+        """Increment whatever we're incrementing.
+
+        Keep it within bounds.
+        """
+        print(">>> Incrementing")
+        if self.min_position_being_updated:
+            self.min_angle += 1
+        if self.min_angle > 180:
+            self.min_angle = 180
+
+        if self.max_position_being_updated:
+            self.max_angle += 1
+        if self.max_angle > 180:
+            self.max_angle = 180
+
+        # if we're moving min and it's > max, increment max also
+        if self.min_angle > self.max_angle:
+            self.max_angle = self.min_angle
+
+        print(f"[{self.min_angle}, {self.max_angle}]")
+
+    def decrement_value(self):
+        """Decremnt whatever we're decrementing.
+
+        Keep it within bounds.
+        """
+        if self.min_position_being_updated:
+            self.min_angle -= 1
+        if self.min_angle < 0:
+            self.min_angle = 0
+
+        if self.max_position_being_updated:
+            self.max_angle -= 1
+        if self.max_angle < 0:
+            self.max_angle = 0
+
+        if self.max_angle < self.min_angle:
+            self.min_angle = self.max_angle
+
+
     def update(self):
         """Update the servo position."""
 
@@ -193,6 +216,51 @@ class ButtonController:
                 getattr(self._mapping[button]['object'], self._mapping[button]['method'])()
 
 
+class RotaryController():
+    """Read rotary encoder value and dispatch accordingly.
+
+    Takes a mapping dictionary of servo objects and method calls.
+    Polls the encoder and calls the appropriate method on the object.
+    """
+
+    def __init__(self, mapping, debounce_interval=60):
+        """Initialize the controller."""
+        self._mapping = mapping
+        self._debounce_interval = debounce_interval
+        self._time_last_checked = utime.ticks_ms()
+
+        self._r = RotaryIRQ(pin_num_clk=21,
+              pin_num_dt=22,
+              min_val=-5000,
+              max_val=+5000,
+              reverse=False,
+              range_mode=RotaryIRQ.RANGE_WRAP, # set wrap, as range starts at min_val
+              pull_up=False,
+              half_step=True)
+
+        self._old_value = self._r.value()
+        self._new_value = self._r.value()
+
+    def check(self):
+        """Check the rotary encoder value and dispatch accordingly."""
+
+        if utime.ticks_diff(utime.ticks_ms(), self._time_last_checked) > self._debounce_interval:
+            self._time_last_checked = utime.ticks_ms()
+            self._new_value = self._r.value()
+            if self._new_value > self._old_value:
+                self._old_value = self._new_value
+                for object in self._mapping:
+                    getattr(object, self._mapping[object]['inc_method'])()
+                    print("Incrementing")
+                    print(object, self._mapping[object]['inc_method'])
+            if self._new_value < self._old_value:
+                self._old_value = self._new_value
+                for object in self._mapping:
+                    # Note the (): you still have to call the method once you've found it.
+                    getattr(object, self._mapping[object]['dec_method'])()
+                    print("Decrementing")
+
+
 
 if __name__ == '__main__':
     print("Starting...")
@@ -220,6 +288,19 @@ if __name__ == '__main__':
 
     buttons = ButtonController(button_mapping, debounce_interval=500)
 
+    rotary_mapping = {
+        servoD5: {
+            "inc_method": "increment_value",
+            "dec_method": "decrement_value"
+        },
+        servoD7: {
+            "inc_method": "increment_value",
+            "dec_method": "decrement_value"
+        }
+    }
+
+    rotary = RotaryController(rotary_mapping)
+
     while True:
         display.set_pen(0, 0, 0)
         display.clear()
@@ -231,4 +312,5 @@ if __name__ == '__main__':
         servoD5.update()
         servoD7.update()
         buttons.check()
+        rotary.check()
 
