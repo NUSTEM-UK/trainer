@@ -38,7 +38,12 @@ def draw_char(xpos, ypos, pattern):
 
 def rescale(x, in_min, in_max, out_min, out_max):
     """Rescale a value from one range to another."""
-    return int((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
+    # Check for range zero
+    if in_max - in_min == 0:
+        print("RESCALE: Caught a divide by zero.")
+        return out_min
+    else:
+        return int( out_min + ((x - in_min) * (out_max - out_min) / (in_max - in_min)) )
 
 
 def zfl(s, width):
