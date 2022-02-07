@@ -43,7 +43,7 @@ def rescale(x, in_min, in_max, out_min, out_max):
         print("RESCALE: Caught a divide by zero.")
         return out_min
     else:
-        return int( out_min + ((x - in_min) * (out_max - out_min) / (in_max - in_min)) )
+        return int((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
 
 
 def zfl(s, width):
@@ -66,8 +66,9 @@ def connection_check():
         if uart1.any() > 0:
             # FIXME: Wrap this is a try/catch, it can error out and cause a crash.
             received = uart1.read().decode()
-            print("response received")
+            print("response received: ")
             print(received)
+            print(">>>end received response<<<")
             if received == "ACK ACK ACK":
                 print('RESPONDED:' + received)
                 print('>>> ASSUMING DIRECT CONTROL <<<')
@@ -337,6 +338,7 @@ if __name__ == '__main__':
         }
     }
     rotary = RotaryController(rotary_mapping)
+
 
     while True:
         display.set_pen(0, 0, 0)
