@@ -159,14 +159,14 @@ void goAboutYourBusiness() {
     // Check if servoD5 has stopped
     if (!servoD5.isMovingAndCallYield()) {
         // Set servo moving again, at random speed
-        servoD5.queueEaseTo(servoD5nextPosition, EASE_CUBIC_IN_OUT, random(20, 150));
+        servoD5.queueEaseTo(servoD5nextPosition, EASE_CUBIC_IN_OUT, random(20, 100));
         // Flip end position
         servoD5nextPosition = 180-servoD5nextPosition;
     }
     // Check if servoD7 has stopped
     if (!servoD7.isMovingAndCallYield()) {
         // Set servo moving again, at random speed
-        servoD7.queueEaseTo(servoD7nextPosition, EASE_CUBIC_IN_OUT, random(20, 150));
+        servoD7.queueEaseTo(servoD7nextPosition, EASE_CUBIC_IN_OUT, random(20, 100));
         // Flip end position
         servoD7nextPosition = 180-servoD7nextPosition;
     }
