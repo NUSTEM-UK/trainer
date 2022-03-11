@@ -77,7 +77,7 @@ def connection_check():
                 is_connected = True
                 waiting_for_connection = False
         # if we haven't had any response, pause briefly and exit
-        utime.sleep(serial_delay)
+        # utime.sleep(serial_delay)
 
 class ServoController:
     """Visual and serial interface for servo control.
